@@ -7,7 +7,8 @@ const router = express.Router();
 // Route to get all the product
 router.get(`/`, async (req, res) => {
   try {
-    const productList = await Product.find().select('name image -_id');
+    // const productList = await Product.find().select('name image -_id'); // To get the name and image only from an api we use select method 
+    const productList = await Product.find().populate('category'); // To get the details of category we use populate method 
     if (!productList) {
       return res.status(500).json({ success: false, message: 'Cannot find the product based on this id' });
     }
@@ -24,7 +25,7 @@ router.get(`/`, async (req, res) => {
 router.get('/:id', async (req, res)=> {
   let productId = req.params.id;
   try {
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category');
     if(!product){
       return res.status(404).json({success: false})
     }
