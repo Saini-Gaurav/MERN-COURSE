@@ -2,31 +2,45 @@ const { Category } = require("../models/category");
 const express = require("express");
 const router = express.Router();
 
+//Route to get all the categories
 router.get("/", async (req, res) => {
-  const categoryList = await Category.find();
+  try {
+    const categoryList = await Category.find();
 
-  if (!categoryList) {
-    return res.status(500).json({ success: false });
+    if (!categoryList) {
+      return res.status(500).json({ success: false, message: "No categories found." });
+    }
+
+    res.status(200).send(categoryList);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "An error occurred while fetching categories.", error: error.message });
   }
-  res.status(200).send(categoryList);
 });
 
+
+//Route to create a new category 
 router.post("/", async (req, res) => {
-  let category = new Category({
-    name: req.body.name,
-    icon: req.body.icon,
-    color: req.body.color,
-  });
+  try {
+    let category = new Category({
+      name: req.body.name,
+      icon: req.body.icon,
+      color: req.body.color,
+    });
 
-  category = await category.save();
+    category = await category.save();
 
-  if (!category) {
-    return res.status(404).send({success: true, message: "Category cannot be created"});
+    if (!category) {
+      return res.status(404).send({ success: false, message: "Category cannot be created" });
+    }
+
+    res.status(200).send(category);
+  } catch (error) {
+    res.status(500).send({ success: false, message: "An error occurred while creating the category.", error: error.message });
   }
-
-  res.status(200).send(category);
 });
 
+
+// Route to update a category
 router.put('/:id', async(req, res) =>{
     const categoryId = req.params.id;
     try {
@@ -40,7 +54,7 @@ router.put('/:id', async(req, res) =>{
         }
     )
     if(!category){
-        return res.status(404).send({success: false, mesaage: 'Category cannot be updated'})
+        return res.status(404).send({success: false, message: 'Category cannot be updated'})
     }
     res.status(200).send(category)
     }
@@ -49,6 +63,7 @@ router.put('/:id', async(req, res) =>{
     }
 })
 
+// Route to get a single category using category id 
 router.get('/:id', async(req, res)=>{
     const categoryId = req.params.id;
     try {
@@ -64,6 +79,7 @@ router.get('/:id', async(req, res)=>{
 
 })
 
+// Route to delete the a category 
 router.delete("/:id", async (req, res) => {
   const categoryId = req.params.id;
   try {
