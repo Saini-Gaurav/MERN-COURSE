@@ -59,7 +59,7 @@ router.put('/:id', async(req, res) =>{
     res.status(200).send(category)
     }
     catch (err){
-        return res.status(500).send({success: false, error: err})
+        return res.status(500).send({success: false, error: err.message})
     }
 })
 
@@ -74,7 +74,7 @@ router.get('/:id', async(req, res)=>{
         res.status(200).send(category);
     }
     catch(err){
-        return res.status(500).send({success: false, error: err})
+        return res.status(500).send({success: false, error: err.message})
     }
 
 })
@@ -92,7 +92,7 @@ router.delete("/:id", async (req, res) => {
       .status(200)
       .send({ succes: true, message: "Category deleted Successfully" });
   } catch (err) {
-    return res.status(400).send({ success: false, error: err });
+    return res.status(400).send({ success: false, error: err.message });
   }
 });
 

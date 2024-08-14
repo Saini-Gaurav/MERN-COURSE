@@ -126,10 +126,11 @@ router.put("/:id", async (req, res) => {
     }
     res.status(200).send(product);
   } catch (err) {
-    return res.status(500).send({ success: false, error: err });
+    return res.status(500).send({ success: false, error: err.message });
   }
 });
 
+// Route to delete a product
 router.delete("/:id", async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res
@@ -146,7 +147,20 @@ router.delete("/:id", async (req, res) => {
       .status(200)
       .send({ success: true, message: "Product deleted successfully" });
   } catch (err) {
-    return res.status(400).send({ success: false, error: err });
+    return res.status(400).send({ success: false, error: err.message });
+  }
+});
+
+// Route to count all the product in our database
+router.get(`/get/count`, async (req, res) => {
+  try {
+    const productCount = await Product.countDocuments();
+    if (!productCount) {
+      return res.status(500).json({ success: false });
+    }
+    res.send({ productCount: productCount });
+  } catch (err) {
+    return res.status(400).send({ success: false, error: err.message });
   }
 });
 
