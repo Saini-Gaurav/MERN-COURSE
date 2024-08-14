@@ -152,13 +152,27 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Route to count all the product in our database
-router.get(`/get/count`, async (req, res) => {
+router.get("/get/count", async (req, res) => {
   try {
     const productCount = await Product.countDocuments();
     if (!productCount) {
       return res.status(500).json({ success: false });
     }
     res.send({ productCount: productCount });
+  } catch (err) {
+    return res.status(400).send({ success: false, error: err.message });
+  }
+});
+
+// Route to show the featured Product
+router.get('/get/feature/:count', async (req, res) => {
+  const count = req.params.count ? req.params.count : 0;
+  try {
+    const featureProduct = await Product.find({isFeatured: true}).limit(+count)
+    if(!featureProduct){
+      return res.status(500).json({success: false});
+    }
+    res.send(featureProduct);
   } catch (err) {
     return res.status(400).send({ success: false, error: err.message });
   }
