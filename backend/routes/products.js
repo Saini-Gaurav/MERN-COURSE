@@ -4,11 +4,12 @@ const { Category } = require("../models/category");
 
 const router = express.Router();
 
+// Route to get all the product
 router.get(`/`, async (req, res) => {
   try {
-    const productList = await Product.find();
+    const productList = await Product.find().select('name image -_id');
     if (!productList) {
-      return res.status(500).json({ success: false });
+      return res.status(500).json({ success: false, message: 'Cannot find the product based on this id' });
     }
     res.send(productList);
   } catch (err) {
@@ -19,6 +20,24 @@ router.get(`/`, async (req, res) => {
   }
 });
 
+// Route to get a single product based on id
+router.get('/:id', async (req, res)=> {
+  let productId = req.params.id;
+  try {
+    const product = await Product.findById(productId);
+    if(!product){
+      return res.status(404).json({success: false})
+    }
+    res.send(product);
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+})
+
+// Route to create a new product
 router.post(`/`, async (req, res) => {
   try {
     const category = await Category.findById(req.body.category);
