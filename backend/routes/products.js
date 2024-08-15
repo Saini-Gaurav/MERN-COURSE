@@ -7,14 +7,13 @@ const router = express.Router();
 
 // Route to get all the product
 router.get(`/`, async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid product id" });
-  }
   try {
+    let filter = {};
+    if(req.query.categories) {
+      filter = {category: req.query.categories.split(',')}
+    }
     // const productList = await Product.find().select('name image -_id'); // To get the name and image only from an api we use select method
-    const productList = await Product.find().populate("category"); // To get the details of category we use populate method
+    const productList = await Product.find(filter).populate("category"); // To get the details of category we use populate method
     if (!productList) {
       return res.status(500).json({
         success: false,
@@ -165,12 +164,14 @@ router.get("/get/count", async (req, res) => {
 });
 
 // Route to show the featured Product
-router.get('/get/feature/:count', async (req, res) => {
+router.get("/get/feature/:count", async (req, res) => {
   const count = req.params.count ? req.params.count : 0;
   try {
-    const featureProduct = await Product.find({isFeatured: true}).limit(+count)
-    if(!featureProduct){
-      return res.status(500).json({success: false});
+    const featureProduct = await Product.find({ isFeatured: true }).limit(
+      +count
+    );
+    if (!featureProduct) {
+      return res.status(500).json({ success: false });
     }
     res.send(featureProduct);
   } catch (err) {
