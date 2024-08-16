@@ -14,6 +14,7 @@ const categoriesRoutes = require('./routes/categories')
 const productsRoutes = require('./routes/products')
 const ordersRoutes = require('./routes/orders');
 const usersRoutes = require('./routes/users')
+const authJwt = require('./helper/jwt')
 
 
 const api = process.env.API_URL;
@@ -21,6 +22,7 @@ const api = process.env.API_URL;
 //Middleware
 app.use(express.json());
 app.use(morgan("tiny"));
+app.use(authJwt());
 
 app.use(`${api}/categories`, categoriesRoutes);
 app.use(`${api}/products`, productsRoutes);
