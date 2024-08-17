@@ -41,8 +41,55 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-//Route to create a users
+//Route to create a Admin
 router.post("/", async (req, res) => {
+  let existingUser;
+  try {
+    //User can sign up with a phone number and email only once
+    existingUser = await User.findOne({
+      $or: [{ email: req.body.email }, { phone: req.body.phone }],
+    });
+    if (existingUser) {
+      return res.status(400).json({
+        message: "Email or Phone already exists, Please login instead",
+      });
+    }
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+  try {
+    let user = new User({
+      name: req.body.name,
+      email: req.body.email,
+      passwordHash: bcrypt.hashSync(req.body.password, 10),
+      phone: req.body.phone,
+      isAdmin: req.body.isAdmin,
+      street: req.body.street,
+      apartment: req.body.apartment,
+      zip: req.body.zip,
+      city: req.body.city,
+      country: req.body.country,
+    });
+
+    user = await user.save();
+
+    if (!user) {
+      return res.status(500).send("User cannot be created");
+    }
+    return res.status(201).send(user);
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+//Route to create a users
+router.post("/register", async (req, res) => {
   let existingUser;
   try {
     //User can sign up with a phone number and email only once
