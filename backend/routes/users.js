@@ -1,4 +1,5 @@
 const { User } = require("../models/user");
+const mongoose = require("mongoose");
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -150,7 +151,7 @@ router.post("/login", async (req, res) => {
       const token = jwt.sign(
         {
           userId: user.id,
-          isAdmin: user.isAdmin
+          isAdmin: user.isAdmin,
         },
         secret,
         { expiresIn: "1d" }
@@ -171,4 +172,43 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Route to delete a user
+router.delete("/:id", async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "User id is not valid" });
+  }
+  try {
+    const userId = req.params.id;
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).send("User cannot be deleted");
+    }
+    return res
+      .status(200)
+      .send({ success: true, message: "User is deleted successfully" });
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+// Route to get the all users
+router.get("/get/count", async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    if (!count) {
+      return res.status(500).json({ success: false });
+    }
+    return res.status(200).send({ userCount: count });
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
 module.exports = router;
