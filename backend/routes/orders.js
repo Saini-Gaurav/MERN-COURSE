@@ -2,6 +2,7 @@ const { Order } = require("../models/order");
 const express = require("express");
 const { OrderItem } = require("../models/order-items");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 // Route to get all the orders
 router.get(`/`, async (req, res) => {
@@ -24,6 +25,11 @@ router.get(`/`, async (req, res) => {
 
 // Route to get the specific order based on the order id
 router.get("/:id", async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid order id" });
+  }
   try {
     const orderId = req.params.id;
     const order = await Order.findById(orderId)
@@ -80,6 +86,66 @@ router.post("/", async (req, res) => {
         .send({ success: false, message: "Order cannot be created" });
     }
     return res.status(201).send(order);
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+// Route to update the order status
+router.put("/:id", async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid order id" });
+  }
+  try {
+    const orderId = req.params.id;
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        status: req.body.status,
+      },
+      {
+        new: true,
+      }
+    );
+    if (!order) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Product not found" });
+    }
+    return res.send(order);
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+// Route to delete a order
+router.delete("/:id", async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid order id" });
+  }
+  try {
+    const orderId = req.params.id;
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Order not found" });
+    }
+    await OrderItem.deleteMany({ _id: { $in: order.orderItems } });
+    await Order.findByIdAndDelete(orderId);
+    return res
+      .status(200)
+      .send({ success: true, message: "Order deleted successfully" });
   } catch (err) {
     return res.status(500).send({
       success: false,
