@@ -78,9 +78,9 @@ router.post("/", async (req, res) => {
     })
   );
 
-  const totalPrice = totalPrices.reduce((a, b)=> a + b , 0)
+  const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
 
-  console.log(totalPrices)
+  console.log(totalPrices);
 
   try {
     let order = new Order({
@@ -162,6 +162,45 @@ router.delete("/:id", async (req, res) => {
     return res
       .status(200)
       .send({ success: true, message: "Order deleted successfully" });
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+//Route to get the total sales
+router.get("/get/totalsales", async (req, res) => {
+  try {
+    const totalSales = await Order.aggregate([
+      { $group: { _id: null, totalsales: { $sum: "$totalPrice" } } },
+    ]);
+
+    if (!totalSales) {
+      return res
+        .status(404)
+        .send({ sucess: false, message: "Total sale cannot be generated" });
+    }
+    return res.status(200).send({ totalsales: totalSales.pop().totalsales });
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+// Route to get the count of the orders
+router.get("/get/count", async (req, res) => {
+  try {
+    const orderCount = await Order.countDocuments();
+    if (!orderCount) {
+      return res
+        .status(404)
+        .send({ success: false, message: "No product found" });
+    }
+    return res.status(200).send({ orderCount: orderCount });
   } catch (err) {
     return res.status(500).send({
       success: false,
