@@ -209,4 +209,26 @@ router.get("/get/count", async (req, res) => {
   }
 });
 
+// Route to get the order of a specific user
+router.get("/get/usersorders/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userOrderList = await Order.find({ user: userId })
+      .populate({
+        path: "orderItems",
+        populate: { path: "product", populate: "category" },
+      })
+      .sort({ dateOrdered: -1 });
+    if (!userOrderList) {
+      return res.status(404).send({ success: false, message: "No user found" });
+    }
+    return res.status(200).send(userOrderList);
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
 module.exports = router;
