@@ -2,28 +2,40 @@ const express = require("express");
 const Product = require("../models/products");
 const { Category } = require("../models/category");
 const mongoose = require("mongoose");
-const multer = require('multer')
+const multer = require("multer");
 
 const router = express.Router();
 
+const FILE_TYPE_MAP = {
+  "image/png": "png",
+  "image/jpeg": "jpeg",
+  "image/jpg": "jpg",
+};
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads')
+    const isValid = FILE_TYPE_MAP[file.mimetype];
+    let uploadError = new Error("Invalid image type");
+    if (isValid) {
+      uploadError = null;
+    }
+    cb(uploadError, "public/uploads");
   },
   filename: function (req, file, cb) {
-    const fileName = file.originalname.split(' ').join('-');
-    cb(null, `${fileName}-${Date.now()}.${extension}`)
-  }
-})
+    const fileName = file.originalname.split(" ").join("-");
+    const extension = FILE_TYPE_MAP[file.mimetype];
+    cb(null, `${fileName}-${Date.now()}.${extension}`);
+  },
+});
 
-const uploadOptions = multer({ storage: storage })
+const uploadOptions = multer({ storage: storage });
 
 // Route to get all the product
 router.get(`/`, async (req, res) => {
   try {
     let filter = {};
-    if(req.query.categories) {
-      filter = {category: req.query.categories.split(',')}
+    if (req.query.categories) {
+      filter = { category: req.query.categories.split(",") };
     }
     // const productList = await Product.find().select('name image -_id'); // To get the name and image only from an api we use select method
     const productList = await Product.find(filter).populate("category"); // To get the details of category we use populate method
@@ -65,14 +77,14 @@ router.get("/:id", async (req, res) => {
 });
 
 // Route to create a new product
-router.post(`/`, uploadOptions.single('image'), async (req, res) => {
+router.post(`/`, uploadOptions.single("image"), async (req, res) => {
   try {
     const category = await Category.findById(req.body.category);
     if (!category) {
       return res.status(404).send("Invalid Category");
     }
     const fileName = req.file.filename;
-    const basePath = `${req.protocol}://${req.get('host')}/public/uploads`;
+    const basePath = `${req.protocol}://${req.get("host")}/public/uploads`;
     let product = new Product({
       name: req.body.name,
       description: req.body.description,
