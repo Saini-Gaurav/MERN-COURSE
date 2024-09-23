@@ -139,12 +139,12 @@ router.put("/:id", uploadOptions.single("image"), async (req, res) => {
     const file = req.file;
     let imagepath;
 
-    if(file){
-      const fileName = req.fileName;
+    if (file) {
+      const fileName = file.filename;
       const basePath = `${req.protocol}://${req.get("host")}/public/uploads`;
       imagepath = `${basePath}${fileName}`;
     } else {
-      imagepath = product.image
+      imagepath = product.image;
     }
 
     let productId = req.params.id;
@@ -227,5 +227,49 @@ router.get("/get/feature/:count", async (req, res) => {
     return res.status(400).send({ success: false, error: err.message });
   }
 });
+
+// Route to add the multiple images
+router.put(
+  "/gallery-images/:id",
+  uploadOptions.array('images', 10),
+  async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid product id" });
+    }
+    
+    let files = req.files;
+    let imagesPaths = [];
+    const basePath = `${req.protocol}://${req.get("host")}/public/uploads`;
+
+    if(files){
+      files.map((file) =>{
+        imagesPaths.push(`${basePath}${file.filename}`)
+      })
+    }
+
+    try {
+      let product = await Product.findByIdAndUpdate(
+        req.params.id,
+        {
+         images: imagesPaths
+        },
+        {
+          new: true,
+        }
+      );
+      if (!product) {
+        return res
+          .status(404)
+          .send({ success: false, message: "The gallery  cannot be updated" });
+      }
+      res.status(200).send(product);
+      
+    } catch (err) {
+      return res.status(400).send({ success: false, error: err.message });
+    }
+  }
+);
 
 module.exports = router;
